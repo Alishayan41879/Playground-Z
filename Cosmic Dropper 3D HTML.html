@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cosmic Dropper — Ali's Game</title>
+<style>
+  :root {
+    --panel: rgba(10, 8, 34, 0.88);
+    --line: rgba(164, 144, 255, 0.40);
+    --text: #f8f6ff;
+    --muted: #c4bddf;
+    --accent: #8be9ff;
+    --accent2: #d17cff;
+    --gold: #ffd36a;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 20%, #15194a 0%, #070a20 45%, #02040d 100%);
+    color: var(--text);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  }
+  canvas { display: block; }
+  button {
+    border: 2px solid rgba(255,255,255,.22);
+    color: #fff;
+    background:
+      linear-gradient(135deg, rgba(104, 82, 255, .96), rgba(213, 83, 255, .92));
+    padding: 18px 30px;
+    min-width: 220px;
+    min-height: 58px;
+    border-radius: 18px;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: .2px;
+    cursor: pointer;
+    transition: .18s ease;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.06) inset,
+      0 10px 35px rgba(118, 75, 255, .28);
+    backdrop-filter: blur(12px);
+  }
+  button:hover {
+    transform: translateY(-3px) scale(1.02);
+    border-color: rgba(255,255,255,.58);
+    box-shadow:
+      0 0 28px rgba(116, 98, 255, .42),
+      0 14px 35px rgba(0,0,0,.28);
+  }
+  button.secondary {
+    background: linear-gradient(135deg, rgba(14, 169, 255, .90), rgba(56, 90, 255, .90));
+    font-weight: 800;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.06) inset,
+      0 10px 30px rgba(0, 162, 255, .20);
+  }
+  #hud {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 5;
+    pointer-events: none;
+    padding: 15px;
+    display: none;
+  }
+  .hud-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  .hud-pill {
+    background: linear-gradient(135deg, rgba(8,12,32,.78), rgba(46,16,66,.70));
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 9px 14px;
+    backdrop-filter: blur(12px);
+    font-size: 13px;
+    box-shadow: 0 0 24px rgba(90,75,255,.08);
+  }
+  #menu, #about, #complete, #levelSelect {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at 25% 20%, rgba(123, 67, 255, .18), transparent 35%),
+      radial-gradient(circle at 80% 70%, rgba(32, 197, 255, .12), transparent 32%),
+      rgba(1, 3, 13, .82);
+    backdrop-filter: blur(7px);
+  }
+  .panel {
+    width: min(820px, calc(100vw - 30px));
+    max-height: calc(100vh - 30px);
+    overflow: auto;
+    padding: 40px;
+    border: 1px solid rgba(196, 160, 255, .26);
+    border-radius: 28px;
+    background:
+      radial-gradient(circle at 12% 10%, rgba(97, 116, 255, .18), transparent 30%),
+      radial-gradient(circle at 92% 85%, rgba(255, 89, 214, .16), transparent 34%),
+      linear-gradient(145deg, rgba(10, 8, 34, .95), rgba(28, 9, 48, .92));
+    box-shadow:
+      0 25px 100px rgba(0,0,0,.58),
+      0 0 80px rgba(126, 90, 255, .14);
+    text-align: center;
+  }
+  .panel h1 {
+    margin: 0 0 10px;
+    font-size: clamp(42px, 8.4vw, 88px);
+    letter-spacing: -4px;
+    line-height: .9;
+    background: linear-gradient(90deg, #7df9ff, #a68cff 40%, #ff7de8 78%, #ffd36a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 32px rgba(142, 128, 255, .18);
+  }
+  .panel h2 { margin-top: 0; }
+  .subtitle {
+    color: var(--muted);
+    font-size: 18px;
+    margin: 14px auto 30px;
+    max-width: 650px;
+    line-height: 1.62;
+  }
+  .button-row {
+    display: flex;
+    justify-content: center;
+    gap: 11px;
+    flex-wrap: wrap;
+  }
+  .levels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin: 22px 0;
+  }
+  .level-card {
+    padding: 19px;
+    text-align: left;
+    border: 1px solid var(--line);
+    background: linear-gradient(145deg, rgba(105,87,255,.16), rgba(20,182,255,.08));
+    border-radius: 18px;
+  }
+  .level-card strong { display:block; margin-bottom: 4px; }
+  .small { color: var(--muted); font-size: 13px; }
+  .controls {
+    display:grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 20px auto;
+    max-width: 450px;
+  }
+  .key {
+    padding: 14px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, rgba(113, 89, 255, .12), rgba(42, 186, 255, .08));
+    border: 1px solid rgba(179, 164, 255, .15);
+  }
+  #toast {
+    position: fixed;
+    top: 74px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 12;
+    padding: 10px 15px;
+    border-radius: 12px;
+    background: rgba(5,9,23,.9);
+    border: 1px solid rgba(255,255,255,.15);
+    display: none;
+    pointer-events: none;
+  }
+  @media (max-width: 560px) {
+    .panel { padding: 23px; }
+    .panel h1 { letter-spacing: -2px; }
+  }
+</style>
+</head>
+<body>
+<div id="hud">
+  <div class="hud-row">
+    <div class="hud-pill" id="levelLabel">Level 1</div>
+    <div class="hud-pill" id="planetLabel">Luna Prime</div>
+    <div class="hud-pill" id="gravityLabel">Gravity: 1.0×</div>
+    <div class="hud-pill" id="depthLabel">Depth: 0%</div>
+    <div class="hud-pill">WASD / Arrow Keys to move • SPACE to jump into the crater • Mouse to look • Click to capture • R to restart • ENTER after clearing a level</div>
+  </div>
+</div>
+
+<div id="menu">
+  <div class="panel">
+    <div class="small" style="letter-spacing:4px; color:#8be9ff;">A 3D COSMIC DROPPER</div>
+    <h1>COSMIC<br>DROPPER</h1>
+    <div style="display:inline-flex; gap:8px; align-items:center; padding:8px 14px; border:1px solid rgba(139,233,255,.25); border-radius:999px; background:rgba(139,233,255,.06); color:#d8d2ff; font-size:13px;">
+      ✦ Decend • Avoid • Survive • Conquer ✦
+    </div>
+    <div class="subtitle">
+      Fall through the different cores of the different planets, and avoid the objects trying to stop you. Do it with the least amount of spawns.
+    </div>
+    <div class="button-row">
+      <button id="startBtn">Start Game</button>
+      <button class="secondary" id="aboutBtn">About Me</button>
+    </div>
+    <div class="controls" style="display:flex; justify-content:center; align-items:flex-end; gap:10px; flex-wrap:wrap;">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+        <div class="key" style="min-width:64px; padding:12px 14px;"><b>W</b></div>
+        <span class="small">Forward</span>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+        <div style="display:flex; gap:10px;">
+          <div class="key" style="min-width:64px; padding:12px 14px;"><b>A</b></div>
+          <div class="key" style="min-width:64px; padding:12px 14px;"><b>S</b></div>
+          <div class="key" style="min-width:64px; padding:12px 14px;"><b>D</b></div>
+        </div>
+        <span class="small">Left • Back • Right</span>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+        <div class="key" style="min-width:92px; padding:12px 14px;"><b>SPACE</b></div>
+        <span class="small">Jump / Drop</span>
+      </div>
+    </div>
+    <div class="small">COSMIC DROPPER • Explore the galaxy, then take the plunge.</div>
+    <div class="small" style="margin-top:10px; color:#ffd36a;">ENTER = continue to the next level after a successful run</div>
+  </div>
+</div>
+
+<div id="about" style="display:none">
+  <div class="panel">
+    <h2>About Me</h2>
+    <p class="subtitle">Hi, My name is Ali. I hope you enjoy my game :)</p>
+    <div class="button-row">
+      <button class="secondary" id="aboutBack">Back</button>
+    </div>
+  </div>
+</div>
+
+<div id="levelSelect" style="display:none">
+  <div class="panel">
+    <h2>Select a Planet</h2>
+    <div class="subtitle">Choose any unlocked level. Finish all five worlds to complete the game. You can also press <b>ENTER</b> to jump straight into the next level.</div>
+    <div style="display:inline-flex; gap:8px; align-items:center; padding:10px 15px; border-radius:13px; background:rgba(255,211,106,.08); border:1px solid rgba(255,211,106,.22); color:#ffe6a5; font-weight:700;">ENTER &nbsp; → &nbsp; NEXT LEVEL</div>
+    <div class="levels" id="levelsGrid"></div>
+    <div class="button-row">
+      <button class="secondary" id="levelsBack">Main Menu</button>
+    </div>
+  </div>
+</div>
+
+<div id="complete" style="display:none">
+  <div class="panel">
+    <div class="small">MISSION COMPLETE</div>
+    <h2>You cleared the Cosmic Dropper!</h2>
+    <p class="subtitle">All five planetary craters have been conquered.</p>
+    <div class="button-row">
+      <button id="againBtn">Play Again</button>
+      <button class="secondary" id="completeMenuBtn">Main Menu</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="crosshair" style="
+  position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+  z-index:6; width:10px; height:10px; border:2px solid rgba(255,255,255,.85);
+  border-radius:50%; box-shadow:0 0 15px rgba(123,238,255,.55);
+  pointer-events:none; display:none;"></div>
+
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.185.0/build/three.module.js";
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x02040d);
+scene.fog = new THREE.FogExp2(0x02040d, 0.0032);
+
+const camera = new THREE.PerspectiveCamera(82, innerWidth / innerHeight, 0.05, 2600);
+camera.position.set(0, 10, 28);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+let lastTime = performance.now();
+
+const hemi = new THREE.HemisphereLight(0xa8cfff, 0x100820, 1.5);
+scene.add(hemi);
+
+const sun = new THREE.DirectionalLight(0xffffff, 2.6);
+sun.position.set(18, 28, 10);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+scene.add(sun);
+
+let stars = null;
+let levelRoot = new THREE.Group();
+scene.add(levelRoot);
+
+const player = new THREE.Group();
+scene.add(player);
+player.visible = false;
+	
+const cameraPivot = new THREE.Group();
+cameraPivot.position.set(0, 0.62, 0);
+player.add(cameraPivot);
+cameraPivot.add(camera);
+
+const cameraState = {
+  yaw: 0,
+  pitch: -0.34,
+  targetYaw: 0,
+  targetPitch: -0.34,
+  sensitivity: 0.00125,
+  minPitch: -1.18,
+  maxPitch: 0.55,
+  bob: 0
+};
+
+const playerVisual = new THREE.Group();
+player.add(playerVisual);
+playerVisual.visible = false;
+
+function mat(color, metalness=0, roughness=.75, emissive=0x000000) {
+  return new THREE.MeshStandardMaterial({ color, metalness, roughness, emissive, emissiveIntensity: emissive ? 1.2 : 0 });
+}
+
+function makeAstronaut() {
+  playerVisual.clear();
+
+  const suit = mat(0xe9efff, .15, .55);
+  const visor = mat(0x142842, .65, .18, 0x0b1730);
+  const pack = mat(0xb9c7de, .25, .5);
+  const boot = mat(0x8c9db7, .2, .6);
+  const glow = mat(0x62d9ff, .2, .35, 0x2bd6ff);
+
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(.64, 1.05, 6, 12), suit);
+  body.castShadow = true; body.position.y = 0;
+  playerVisual.add(body);
+
+  const helmet = new THREE.Mesh(new THREE.SphereGeometry(.62, 16, 10), suit);
+  helmet.scale.y = .95; helmet.castShadow = true; helmet.position.y = 1.02;
+  playerVisual.add(helmet);
+
+  const visorM = new THREE.Mesh(new THREE.SphereGeometry(.42, 16, 8), visor);
+  visorM.scale.set(1.0,.72,.48); visorM.position.set(0,1.05,.43);
+  playerVisual.add(visorM);
+
+  const backpack = new THREE.Mesh(new THREE.BoxGeometry(.58,.95,.34), pack);
+  backpack.position.set(0,.05,-.48); backpack.castShadow = true;
+  playerVisual.add(backpack);
+
+  for (const s of [-1,1]) {
+    const arm = new THREE.Mesh(new THREE.CapsuleGeometry(.16,.72,5,10), suit);
+    arm.rotation.z = s * .44; arm.position.set(s*.72,.1,0);
+    arm.castShadow = true; playerVisual.add(arm);
+
+    const bootM = new THREE.Mesh(new THREE.BoxGeometry(.34,.28,.56), boot);
+    bootM.position.set(s*.29,-.86,.04);
+    bootM.castShadow = true; playerVisual.add(bootM);
+
+    const thruster = new THREE.Mesh(new THREE.CylinderGeometry(.09,.07,.30,10), glow);
+    thruster.position.set(s*.21,-1.03,-.03);
+    playerVisual.add(thruster);
+  }
+}
+makeAstronaut();
+
+const PLANETS = [
+  {
+    name: "Luna Prime",
+    color: 0x5b6fd8,
+    accent: 0x8be9ff,
+    fog: 0x070b20,
+    gravity: 10.5,
+    radius: 16,
+    depth: 390,
+    craterCount: 11,
+    obstacle: "rocks",
+    speed: 0.72,
+    layout: "slalom"
+  },
+  {
+    name: "Astra-9",
+    color: 0x8a48d8,
+    accent: 0xff79de,
+    fog: 0x16082a,
+    gravity: 12.5,
+    radius: 15,
+    depth: 430,
+    craterCount: 13,
+    obstacle: "lasers",
+    speed: 0.76,
+    layout: "gates"
+  },
+  {
+    name: "Cinder-7",
+    color: 0xd45a43,
+    accent: 0xffcf78,
+    fog: 0x1c0905,
+    gravity: 14.0,
+    radius: 15.5,
+    depth: 470,
+    craterCount: 14,
+    obstacle: "asteroids",
+    speed: 0.80,
+    layout: "field"
+  },
+  {
+    name: "Neptune Drift",
+    color: 0x2378d1,
+    accent: 0x66f4ff,
+    fog: 0x041526,
+    gravity: 9.0,
+    radius: 17,
+    depth: 500,
+    craterCount: 15,
+    obstacle: "fans",
+    speed: 0.64,
+    layout: "spiral"
+  },
+  {
+    name: "Void Titan",
+    color: 0x3b356f,
+    accent: 0xa6ffe5,
+    fog: 0x030c13,
+    gravity: 16.0,
+    radius: 14,
+    depth: 540,
+    craterCount: 17,
+    obstacle: "rings",
+    speed: 0.86,
+    layout: "rings"
+  }
+];
+
+const state = {
+  level: 0,
+  running: false,
+  finished: false,
+  unlocked: 1,
+  keys: {},
+  vx: 0,
+  vz: 0,
+  vy: 0,
+  y: 0,
+  respawnTimer: 0,
+  invulnerable: 0,
+  hitLocked: false,
+  shake: 0,
+  startY: 0,
+  grounded: true,
+  airborne: false,
+  jumpCooldown: 0,
+  passedHazards: new Set(),
+  checkpointIndex: -1
+};
+
+function clearLevel() {
+  while (levelRoot.children.length) {
+    const c = levelRoot.children.pop();
+    c.traverse(o => {
+      if (o.geometry) o.geometry.dispose();
+      if (o.material) {
+        if (Array.isArray(o.material)) o.material.forEach(m=>m.dispose());
+        else o.material.dispose();
+      }
+    });
+  }
+}
+
+function createStars() {
+  if (stars) scene.remove(stars);
+
+  const geo = new THREE.BufferGeometry();
+  const pts = [];
+  const cols = [];
+
+  const starColors = [
+    new THREE.Color(0xffffff),
+    new THREE.Color(0x8be9ff),
+    new THREE.Color(0xff9fe8),
+    new THREE.Color(0xc8b8ff),
+    new THREE.Color(0xffe59a)
+  ];
+
+  for (let i=0; i<4200; i++) {
+    const r = 650 + Math.random()*1150;
+    const theta = Math.random()*Math.PI*2;
+    const phi = Math.acos(2*Math.random()-1);
+    pts.push(
+      r*Math.sin(phi)*Math.cos(theta),
+      r*Math.cos(phi),
+      r*Math.sin(phi)*Math.sin(theta)
+    );
+    const c = starColors[Math.floor(Math.random()*starColors.length)];
+    cols.push(c.r, c.g, c.b);
+  }
+
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
+  geo.setAttribute("color", new THREE.Float32BufferAttribute(cols, 3));
+
+  const material = new THREE.PointsMaterial({
+    color: 0xffffff,
+    vertexColors: true,
+    size: 1.15,
+    sizeAttenuation: true,
+    transparent: true,
+    opacity: .95
+  });
+
+  stars = new THREE.Points(geo, material);
+  scene.add(stars);
+}
+
+
+function makeLaunchPlatform(p) {
+  const platform = new THREE.Group();
+  platform.position.y = 2.0;
+
+  const floor = new THREE.Mesh(
+    new THREE.CylinderGeometry(p.radius * .95, p.radius * 1.02, 1.2, 64),
+    new THREE.MeshStandardMaterial({
+      color: p.accent,
+      metalness: .15,
+      roughness: .58,
+      emissive: p.accent,
+      emissiveIntensity: .10
+    })
+  );
+  floor.receiveShadow = true;
+  platform.add(floor);
+
+  const inner = new THREE.Mesh(
+    new THREE.CylinderGeometry(p.radius * .68, p.radius * .72, .18, 64),
+    new THREE.MeshStandardMaterial({
+      color: p.color,
+      metalness: .25,
+      roughness: .45,
+      emissive: p.color,
+      emissiveIntensity: .12
+    })
+  );
+  inner.position.y = .62;
+  platform.add(inner);
+
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(p.radius * .79, .22, 10, 64),
+    new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: p.accent,
+      emissiveIntensity: 1.4,
+      metalness: .4,
+      roughness: .25
+    })
+  );
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = .72;
+  platform.add(ring);
+
+  for (let i = 0; i < 6; i++) {
+    const a = i / 6 * Math.PI * 2;
+    const marker = new THREE.Mesh(
+      new THREE.BoxGeometry(1.0, .07, 2.6),
+      new THREE.MeshStandardMaterial({
+        color: i % 2 ? 0xffffff : p.accent,
+        emissive: i % 2 ? p.accent : p.color,
+        emissiveIntensity: .8
+      })
+    );
+    marker.position.set(Math.cos(a) * p.radius * .56, .72, Math.sin(a) * p.radius * .56);
+    marker.rotation.y = -a;
+    platform.add(marker);
+  }
+
+  // "DROP" beacon in the center.
+  const beacon = new THREE.Mesh(
+    new THREE.CylinderGeometry(.25, .25, 2.8, 16),
+    new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: p.accent,
+      emissiveIntensity: 2
+    })
+  );
+  beacon.position.y = 1.55;
+  platform.add(beacon);
+
+  levelRoot.add(platform);
+}
+
+
+
+function makeCosmicAtmosphere(p) {
+  const group = new THREE.Group();
+
+  const nebulaColors = [0x7b61ff, 0xff55d6, 0x27ddff, 0xffbf5b];
+  for (let i = 0; i < 14; i++) {
+    const color = nebulaColors[i % nebulaColors.length];
+    const cloud = new THREE.Mesh(
+      new THREE.SphereGeometry(18 + Math.random()*28, 24, 16),
+      new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.035 + Math.random()*0.045,
+        depthWrite: false
+      })
+    );
+    const a = Math.random()*Math.PI*2;
+    const r = 30 + Math.random()*85;
+    cloud.position.set(
+      Math.cos(a)*r,
+      40 + (Math.random()-.5)*120,
+      Math.sin(a)*r
+    );
+    cloud.scale.set(1.8, .55 + Math.random(), 1.15);
+    group.add(cloud);
+  }
+
+  for (let i = 0; i < 24; i++) {
+    const c = nebulaColors[(i+1) % nebulaColors.length];
+    const shape = i % 3 === 0
+      ? new THREE.TetrahedronGeometry(.5 + Math.random()*.8)
+      : i % 3 === 1
+        ? new THREE.OctahedronGeometry(.45 + Math.random()*.75)
+        : new THREE.IcosahedronGeometry(.5 + Math.random()*.65, 0);
+
+    const m = new THREE.Mesh(
+      shape,
+      new THREE.MeshStandardMaterial({
+        color: c,
+        emissive: c,
+        emissiveIntensity: .35,
+        metalness: .28,
+        roughness: .3,
+        transparent: true,
+        opacity: .72
+      })
+    );
+    const a = Math.random()*Math.PI*2;
+    const r = p.radius + 8 + Math.random()*42;
+    m.position.set(
+      Math.cos(a)*r,
+      6 + Math.random()*28,
+      Math.sin(a)*r
+    );
+    m.rotation.set(Math.random(), Math.random(), Math.random());
+    m.userData.spin = .2 + Math.random()*.8;
+    group.add(m);
+  }
+
+  group.userData.kind = "cosmicAtmosphere";
+  levelRoot.add(group);
+}
+
+function makeSurfaceAndEntrance(p) {
+  const surface = new THREE.Mesh(
+    new THREE.CylinderGeometry(p.radius*1.52, p.radius*1.62, 1.8, 72),
+    new THREE.MeshStandardMaterial({
+      color: p.color,
+      metalness: .08,
+      roughness: .62,
+      emissive: p.color,
+      emissiveIntensity: .08
+    })
+  );
+  surface.position.y = 4.2;
+  surface.receiveShadow = true;
+  levelRoot.add(surface);
+
+  // Radial glowing paths.
+  for (let i=0; i<10; i++) {
+    const a = i/10*Math.PI*2;
+    const path = new THREE.Mesh(
+      new THREE.BoxGeometry(p.radius*.54, .06, .18),
+      new THREE.MeshStandardMaterial({
+        color: p.accent,
+        emissive: p.accent,
+        emissiveIntensity: 1.25
+      })
+    );
+    path.position.set(Math.cos(a)*p.radius*.76, 5.15, Math.sin(a)*p.radius*.76);
+    path.rotation.y = -a;
+    levelRoot.add(path);
+  }
+
+  const outerRing = new THREE.Mesh(
+    new THREE.TorusGeometry(p.radius*.92, 1.0, 12, 80),
+    new THREE.MeshStandardMaterial({
+      color: p.accent,
+      emissive: p.accent,
+      emissiveIntensity: .55,
+      metalness: .25,
+      roughness: .48
+    })
+  );
+  outerRing.rotation.x = Math.PI/2;
+  outerRing.position.y = 5.1;
+  levelRoot.add(outerRing);
+
+  const pad = new THREE.Mesh(
+    new THREE.CylinderGeometry(3.1, 3.1, .35, 32),
+    new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: p.accent,
+      emissiveIntensity: .75,
+      metalness: .3,
+      roughness: .28
+    })
+  );
+  pad.position.set(0, 5.3, p.radius*.48);
+  pad.receiveShadow = true;
+  levelRoot.add(pad);
+
+  const padRing = new THREE.Mesh(
+    new THREE.TorusGeometry(2.55, .16, 8, 40),
+    new THREE.MeshStandardMaterial({
+      color: p.accent,
+      emissive: p.accent,
+      emissiveIntensity: 1.8
+    })
+  );
+  padRing.rotation.x = Math.PI/2;
+  padRing.position.copy(pad.position);
+  padRing.position.y += .2;
+  levelRoot.add(padRing);
+}
+
+function craterFloor(radius, color) {
+  const g = new THREE.CylinderGeometry(radius*.80, radius*1.18, 2.8, 64, 1, false);
+  const m = mat(color, .05, .95);
+  const mesh = new THREE.Mesh(g, m);
+  mesh.position.y = -1.4;
+  mesh.receiveShadow = true;
+  levelRoot.add(mesh);
+
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(radius*.84, 1.15, 10, 64),
+    mat(color, .08, .9)
+  );
+  ring.rotation.x = Math.PI/2;
+  ring.position.y = .1;
+  ring.receiveShadow = true;
+  levelRoot.add(ring);
+}
+
+function makeCraterWalls(p, floorY, radius) {
+  const segs = 46;
+  const wallColors = [p.color, p.accent, 0x5f4fd6, 0x2fd1ff, 0xff5fcf];
+
+  for (let i=0; i<segs; i++) {
+    const a = (i/segs)*Math.PI*2;
+    const rr = radius + 1.0 + (Math.sin(i*1.7)*.42);
+    const h = 5.0 + (i%5)*.72;
+    const col = wallColors[i % wallColors.length];
+
+    const rock = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(.92 + (i%3)*.18, 1),
+      new THREE.MeshStandardMaterial({
+        color: col,
+        metalness: .05,
+        roughness: .82,
+        emissive: col,
+        emissiveIntensity: .10
+      })
+    );
+
+    rock.scale.y = h/1.7;
+    rock.position.set(Math.cos(a)*rr, floorY + h*.2, Math.sin(a)*rr);
+    rock.rotation.set(Math.random(), Math.random()*Math.PI, Math.random());
+    rock.castShadow = true;
+    rock.receiveShadow = true;
+    levelRoot.add(rock);
+
+    const light = new THREE.PointLight(col, 2.2, 28);
+    light.position.set(
+      Math.cos(a)*(rr-.35),
+      floorY + 3 + (i%3)*1.5,
+      Math.sin(a)*(rr-.35)
+    );
+    levelRoot.add(light);
+  }
+
+  // Long glowing wall bands to make the whole shaft feel like a cosmic tunnel.
+  const p2 = new THREE.Color(p.accent);
+  for (let i=0; i<10; i++) {
+    const bandY = floorY - 25 - i * ((p.depth-40)/10);
+    const band = new THREE.Mesh(
+      new THREE.TorusGeometry(radius*.93, .18 + (i%2)*.12, 8, 64),
+      new THREE.MeshStandardMaterial({
+        color: i%2 ? p.accent : 0xff71dc,
+        emissive: i%2 ? p.accent : 0xff71dc,
+        emissiveIntensity: 1.5,
+        transparent: true,
+        opacity: .82
+      })
+    );
+    band.rotation.x = Math.PI/2;
+    band.position.y = bandY;
+    levelRoot.add(band);
+  }
+}
+
+
+function makeHazard(type, y, radius, index, p) {
+  const group = new THREE.Group();
+  group.userData.hazard = true;
+  group.userData.baseY = y;
+  group.userData.phase = index * 0.67;
+  group.userData.kind = type;
+  group.userData.hitId = `hazard-${state.level}-${index}`;
+  group.userData.layoutIndex = index;
+  group.userData.anchorX = 0;
+  group.userData.anchorZ = 0;
+
+  const palette = [p.accent, 0xff69d8, 0xffd166, 0x68f2ff, 0xb58cff];
+
+  const addRock = (x, z, scale, color, shapeIndex = 0) => {
+    const geometries = [
+      new THREE.IcosahedronGeometry(1, 0),
+      new THREE.DodecahedronGeometry(1, 0),
+      new THREE.OctahedronGeometry(1, 0),
+      new THREE.ConeGeometry(1, 1.7, 6),
+      new THREE.BoxGeometry(1.35, 1.0, 1.15)
+    ];
+
+    const geo = geometries[shapeIndex % geometries.length];
+    const mesh = new THREE.Mesh(
+      geo,
+      new THREE.MeshStandardMaterial({
+        color,
+        metalness: 0.08,
+        roughness: 0.78,
+        emissive: color,
+        emissiveIntensity: 0.11
+      })
+    );
+
+    mesh.position.set(x, (Math.random() - 0.5) * 1.7, z);
+    mesh.scale.set(
+      scale * (0.75 + Math.random() * 0.45),
+      scale * (0.75 + Math.random() * 0.65),
+      scale * (0.75 + Math.random() * 0.45)
+    );
+    mesh.rotation.set(
+      Math.random() * Math.PI,
+      Math.random() * Math.PI,
+      Math.random() * Math.PI
+    );
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    group.add(mesh);
+  };
+
+  if (type === "rocks") {
+    const count = 3 + (index % 3);
+    for (let k = 0; k < count; k++) {
+      const a = (k / count) * Math.PI * 2 + (index % 2) * 0.7;
+      const r = radius * (0.20 + Math.random() * 0.42);
+      addRock(
+        Math.cos(a) * r,
+        Math.sin(a) * r,
+        0.55 + Math.random() * 0.85,
+        palette[k % palette.length],
+        index + k
+      );
+    }
+  }
+
+  if (type === "lasers") {
+    const count = 2 + (index % 2);
+    const angle = index % 2 ? Math.PI * 0.5 : 0;
+
+    for (let k = 0; k < count; k++) {
+      const length = radius * (0.46 + Math.random() * 0.32);
+      const thick = 0.16 + Math.random() * 0.14;
+
+      const beam = new THREE.Mesh(
+        new THREE.BoxGeometry(length, thick, thick),
+        new THREE.MeshStandardMaterial({
+          color: palette[k % palette.length],
+          emissive: palette[k % palette.length],
+          emissiveIntensity: 1.7,
+          metalness: 0.3,
+          roughness: 0.23
+        })
+      );
+
+      beam.position.set(
+        (k - (count - 1) / 2) * radius * 0.26,
+        (k - (count - 1) / 2) * 0.9,
+        0
+      );
+      beam.rotation.y = angle + index * 0.28;
+      group.add(beam);
+    }
+  }
+
+  if (type === "asteroids") {
+    const count = 4 + (index % 3);
+    for (let k = 0; k < count; k++) {
+      const a = (k / count) * Math.PI * 2 + Math.random() * 0.5;
+      const r = radius * (0.14 + Math.random() * 0.52);
+      addRock(
+        Math.cos(a) * r,
+        Math.sin(a) * r,
+        0.50 + Math.random() * 0.95,
+        palette[(k + 2) % palette.length],
+        k + 1
+      );
+    }
+  }
+
+  if (type === "fans") {
+    const bladeCount = 4 + (index % 2);
+    const hubSize = 0.7 + (index % 2) * 0.25;
+
+    const hub = new THREE.Mesh(
+      new THREE.CylinderGeometry(hubSize, hubSize, 0.42, 24),
+      new THREE.MeshStandardMaterial({
+        color: p.color,
+        metalness: 0.55,
+        roughness: 0.28
+      })
+    );
+    hub.rotation.x = Math.PI / 2;
+    group.add(hub);
+
+    const bladeLength = radius * 0.42;
+    for (let k = 0; k < bladeCount; k++) {
+      const blade = new THREE.Mesh(
+        new THREE.BoxGeometry(
+          bladeLength,
+          0.13 + Math.random() * 0.10,
+          0.34 + Math.random() * 0.26
+        ),
+        new THREE.MeshStandardMaterial({
+          color: palette[(k + 2) % palette.length],
+          emissive: palette[(k + 2) % palette.length],
+          emissiveIntensity: 1.0,
+          metalness: 0.25,
+          roughness: 0.28
+        })
+      );
+      blade.position.x = bladeLength * 0.34;
+      blade.rotation.z = k * (Math.PI * 2 / bladeCount);
+      group.add(blade);
+    }
+  }
+
+  if (type === "rings") {
+    const ringCount = 2 + (index % 2);
+    for (let k = 0; k < ringCount; k++) {
+      const major = radius * (0.25 + k * 0.12);
+      const tube = 0.24 + Math.random() * 0.22;
+
+      const torus = new THREE.Mesh(
+        new THREE.TorusGeometry(major, tube, 10, 40),
+        new THREE.MeshStandardMaterial({
+          color: palette[(k + 1) % palette.length],
+          emissive: palette[(k + 1) % palette.length],
+          emissiveIntensity: 1.25,
+          metalness: 0.55,
+          roughness: 0.22
+        })
+      );
+
+      torus.rotation.x = Math.PI / 2 + (Math.random() - 0.5) * 0.45;
+      torus.rotation.z = Math.random() * Math.PI;
+      group.add(torus);
+    }
+  }
+
+  group.position.y = y;
+
+  const beacon = new THREE.Mesh(
+    new THREE.SphereGeometry(0.13, 12, 8),
+    new THREE.MeshStandardMaterial({
+      color: p.accent,
+      emissive: p.accent,
+      emissiveIntensity: 2.4
+    })
+  );
+  beacon.position.set(0, -2.0, 0);
+  group.add(beacon);
+
+  levelRoot.add(group);
+  return group;
+}
+
+const hazards = [];
+function buildLevel(index) {
+  clearLevel();
+  const p = PLANETS[index];
+  createStars();
+
+  scene.fog.color.setHex(p.fog);
+  scene.background.setHex(p.fog);
+  hemi.color.setHex(p.accent);
+  hemi.groundColor.setHex(p.fog);
+  sun.color.setHex(0xffffff);
+
+  const world = new THREE.Mesh(
+    new THREE.CylinderGeometry(p.radius*1.22, p.radius*1.34, p.depth+25, 64, 1, true),
+    new THREE.MeshBasicMaterial({ color:p.color, side:THREE.BackSide, transparent:true, opacity:.28 })
+  );
+  world.position.y = -(p.depth/2);
+  levelRoot.add(world);
+
+  const outerGlow = new THREE.Mesh(
+    new THREE.CylinderGeometry(p.radius*1.08, p.radius*1.10, p.depth, 64, 1, true),
+    new THREE.MeshStandardMaterial({
+      color:p.color, side:THREE.BackSide, transparent:true, opacity:.19,
+      emissive:p.color, emissiveIntensity:.35
+    })
+  );
+  outerGlow.position.y = -(p.depth/2);
+  levelRoot.add(outerGlow);
+
+  makeCosmicAtmosphere(p);
+  makeSurfaceAndEntrance(p);
+  makeLaunchPlatform(p);
+  craterFloor(p.radius, p.color);
+  makeCraterWalls(p, 0, p.radius);
+
+  for (let i=1;i<=8;i++) {
+    const y = -(i*p.depth/9);
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(p.radius*.95, .11, 6, 64),
+      mat(p.accent,.1,.7,p.accent)
+    );
+    ring.rotation.x = Math.PI/2;
+    ring.position.y = y;
+    ring.material.transparent = true;
+    ring.material.opacity = .32;
+    levelRoot.add(ring);
+  }
+
+  hazards.length = 0;
+  const gap = (p.depth - 52) / (p.craterCount + 1);
+
+  for (let i = 0; i < p.craterCount; i++) {
+    const y = -25 - i * gap;
+    const h = makeHazard(p.obstacle, y, p.radius, i, p);
+
+    if (p.layout === "slalom") {
+      const lane = (i % 3) - 1;
+      h.position.x += lane * p.radius * 0.24;
+      h.position.z += Math.sin(i * 0.9) * p.radius * 0.14;
+      h.rotation.y = i * 0.42;
+    }
+
+    if (p.layout === "gates") {
+      h.position.x += (i % 2 ? 1 : -1) * p.radius * 0.17;
+      h.position.z += Math.cos(i * 0.8) * p.radius * 0.11;
+      h.rotation.y = (i % 2) * Math.PI * 0.5 + i * 0.18;
+    }
+
+    if (p.layout === "field") {
+      h.position.x += Math.sin(i * 1.31) * p.radius * 0.28;
+      h.position.z += Math.cos(i * 0.93) * p.radius * 0.24;
+      h.rotation.y = i * 0.31;
+    }
+
+    if (p.layout === "spiral") {
+      const a = i * 0.62;
+      h.position.x += Math.cos(a) * p.radius * 0.26;
+      h.position.z += Math.sin(a) * p.radius * 0.26;
+      h.rotation.y = a;
+    }
+
+    if (p.layout === "rings") {
+      const lane = i % 3;
+      h.position.x += (lane - 1) * p.radius * 0.18;
+      h.position.z += Math.sin(i * 0.62) * p.radius * 0.18;
+      h.rotation.y = i * 0.22;
+    }
+
+    h.position.y = y - (i % 3) * 1.2;
+    h.userData.anchorX = h.position.x;
+    h.userData.anchorZ = h.position.z;
+    hazards.push(h);
+
+    if (i > 0 && i % 3 === 0) {
+      const checkpoint = new THREE.Mesh(
+        new THREE.TorusGeometry(p.radius * 0.46, 0.08, 8, 48),
+        new THREE.MeshStandardMaterial({
+          color: p.accent,
+          emissive: p.accent,
+          emissiveIntensity: 1.7,
+          transparent: true,
+          opacity: 0.55
+        })
+      );
+      checkpoint.rotation.x = Math.PI / 2;
+      checkpoint.position.y = y + 7;
+      checkpoint.userData.checkpoint = true;
+      levelRoot.add(checkpoint);
+    }
+  }
+
+  // Finish beacon at bottom.
+  const beacon = new THREE.Group();
+  const beam = new THREE.Mesh(
+    new THREE.CylinderGeometry(.16,.16,9,16),
+    mat(p.accent,.2,.25,p.accent)
+  );
+  beam.position.y = 4;
+  beacon.add(beam);
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(1.5, 24, 16), mat(p.accent,.15,.3,p.accent));
+  ball.position.y = 8.7;
+  beacon.add(ball);
+  beacon.position.y = -p.depth + 8;
+  levelRoot.add(beacon);
+
+  state.y = 6.15;
+  state.startY = 6.15;
+  player.position.set(0, state.y, p.radius*.48);
+  cameraPivot.rotation.set(0, 0, 0);
+  state.vx = 0;
+  state.vz = 0;
+  state.vy = 0;
+  state.respawnTimer = 0;
+  state.invulnerable = 0;
+  state.hitLocked = false;
+  state.grounded = true;
+  state.airborne = false;
+  state.jumpCooldown = 0;
+  state.passedHazards = new Set();
+
+  document.getElementById("levelLabel").textContent = `Level ${index+1} / ${PLANETS.length}`;
+  document.getElementById("planetLabel").textContent = p.name;
+  document.getElementById("gravityLabel").textContent = `Gravity: ${(p.gravity/9).toFixed(2)}×`;
+  updateDepth();
+}
+
+function updateDepth() {
+  const p = PLANETS[state.level];
+  const pct = Math.max(0, Math.min(100, ((-player.position.y) / p.depth) * 100));
+  document.getElementById("depthLabel").textContent = `Depth: ${pct.toFixed(0)}%`;
+}
+
+function showToast(text) {
+  const el = document.getElementById("toast");
+  el.textContent = text;
+  el.style.display = "block";
+  clearTimeout(showToast.t);
+  showToast.t = setTimeout(() => el.style.display = "none", 1800);
+}
+
+function respawn(reason = "Obstacle hit!") {
+  if (state.hitLocked) return;
+
+  state.hitLocked = true;
+  state.respawnTimer = 0.45;
+  state.invulnerable = 0.90;
+
+  const p = PLANETS[state.level];
+
+  state.vx = 0;
+  state.vz = 0;
+  state.vy = 0;
+  state.y = state.startY;
+  state.grounded = true;
+  state.airborne = false;
+  state.jumpCooldown = 0;
+
+  player.position.set(0, state.startY, p.radius * 0.48);
+  cameraState.yaw = 0;
+  cameraState.pitch = -0.34;
+  cameraState.targetYaw = 0;
+  cameraState.targetPitch = -0.34;
+
+  state.passedHazards = new Set();
+
+  state.shake = 0.45;
+  player.visible = false;
+
+  setTimeout(() => {
+    if (state.running) player.visible = true;
+  }, 220);
+
+  showToast(`${reason}  Back to the launch area…`);
+}
+
+function collisionTest() {
+  if (!state.airborne || state.invulnerable > 0 || state.respawnTimer > 0 || state.hitLocked) return null;
+
+  const playerPos = player.getWorldPosition(new THREE.Vector3());
+  const playerRadius = 0.72;
+
+  for (const h of hazards) {
+    if (state.passedHazards.has(h.userData.hitId)) continue;
+
+    let collided = false;
+
+    for (const child of h.children) {
+      if (!child.geometry) continue;
+
+      if (!child.geometry.boundingSphere) {
+        child.geometry.computeBoundingSphere();
+      }
+
+      const center = new THREE.Vector3();
+      child.getWorldPosition(center);
+
+      const sphere = child.geometry.boundingSphere;
+      const scale = Math.max(
+        Math.abs(child.scale.x),
+        Math.abs(child.scale.y),
+        Math.abs(child.scale.z)
+      );
+
+      const effectiveRadius = Math.max(
+        0.28,
+        Math.min(2.4, sphere.radius * scale)
+      );
+
+      const dx = playerPos.x - center.x;
+      const dy = playerPos.y - center.y;
+      const dz = playerPos.z - center.z;
+
+      const horizontal = Math.hypot(dx, dz);
+
+      if (
+        horizontal < effectiveRadius * 0.72 + playerRadius * 0.25 &&
+        Math.abs(dy) < effectiveRadius * 0.68 + 0.55
+      ) {
+        collided = true;
+        break;
+      }
+    }
+
+    if (collided) return h;
+  }
+
+  for (const h of hazards) {
+    if (
+      !state.passedHazards.has(h.userData.hitId) &&
+      playerPos.y < h.position.y - 5.0
+    ) {
+      state.passedHazards.add(h.userData.hitId);
+    }
+  }
+
+  return null;
+}
+
+function finishLevel() {
+  if (!state.running) return;
+
+  state.running = false;
+  state.finished = true;
+
+  state.grounded = false;
+  state.airborne = false;
+  state.vx = 0;
+  state.vz = 0;
+  state.vy = 0;
+
+  player.visible = false;
+  releaseGamePointer();
+
+  if (state.level + 1 >= PLANETS.length) {
+    document.getElementById("hud").style.display = "none";
+    document.getElementById("complete").style.display = "flex";
+  } else {
+    state.unlocked = Math.max(state.unlocked, state.level + 2);
+    populateLevelSelect();
+    document.getElementById("hud").style.display = "none";
+    document.getElementById("levelSelect").style.display = "flex";
+  }
+}
+
+function releaseGamePointer() {
+  try { document.exitPointerLock?.(); } catch {}
+  document.getElementById("crosshair").style.display = "none";
+}
+
+function startLevel(index=0) {
+  releaseGamePointer();
+  state.level = index;
+  state.running = true;
+  lookX = 0;
+  lookY = 0;
+  cameraState.yaw = 0;
+  cameraState.pitch = -0.34;
+  cameraState.targetYaw = 0;
+  cameraState.targetPitch = -0.34;
+  camera.fov = 82;
+  state.finished = false;
+  document.getElementById("menu").style.display = "none";
+  document.getElementById("about").style.display = "none";
+  document.getElementById("levelSelect").style.display = "none";
+  document.getElementById("complete").style.display = "none";
+  document.getElementById("hud").style.display = "block";
+  document.getElementById("crosshair").style.display = "block";
+  buildLevel(index);
+  player.visible = true;
+  playerVisual.visible = false;
+  camera.position.set(0, 0.68, 0);
+  showToast(`Entering ${PLANETS[index].name}`);
+}
+
+function populateLevelSelect() {
+  const grid = document.getElementById("levelsGrid");
+  grid.innerHTML = "";
+  PLANETS.forEach((p, i) => {
+    const card = document.createElement("button");
+    card.className = "level-card";
+    card.disabled = i+1 > state.unlocked;
+    card.innerHTML = `<strong>${i+1}. ${p.name}</strong><span class="small">Gravity ${(p.gravity/9).toFixed(2)}× • ${p.obstacle}<br>${p.layout.toUpperCase()} COURSE</span>`;
+    card.style.opacity = card.disabled ? ".4" : "1";
+    card.addEventListener("click", () => {
+      releaseGamePointer();
+      startLevel(i);
+    });
+    grid.appendChild(card);
+  });
+}
+
+document.getElementById("startBtn").addEventListener("click", () => startLevel(0));
+document.getElementById("aboutBtn").addEventListener("click", () => {
+  releaseGamePointer();
+  document.getElementById("menu").style.display = "none";
+  document.getElementById("about").style.display = "flex";
+});
+document.getElementById("aboutBack").addEventListener("click", () => {
+  releaseGamePointer();
+  document.getElementById("about").style.display = "none";
+  document.getElementById("menu").style.display = "flex";
+});
+document.getElementById("levelsBack").addEventListener("click", () => {
+  releaseGamePointer();
+  document.getElementById("levelSelect").style.display = "none";
+  document.getElementById("menu").style.display = "flex";
+});
+document.getElementById("againBtn").addEventListener("click", () => {
+  releaseGamePointer();
+  startLevel(0);
+});
+document.getElementById("completeMenuBtn").addEventListener("click", () => {
+  releaseGamePointer();
+  document.getElementById("complete").style.display = "none";
+  document.getElementById("menu").style.display = "flex";
+});
+populateLevelSelect();
+buildLevel(0);
+player.visible = false;
+state.running = false;
+state.grounded = true;
+state.airborne = false;
+document.getElementById("hud").style.display = "none";
+document.getElementById("crosshair").style.display = "none";
+
+addEventListener("keydown", (e) => {
+  state.keys[e.code] = true;
+  if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space","Enter"].includes(e.code)) e.preventDefault();
+
+  if (e.code === "KeyR" && state.running) {
+    document.exitPointerLock?.();
+    startLevel(state.level);
+    return;
+  }
+
+  if (e.code === "Enter" && document.getElementById("levelSelect").style.display !== "none") {
+    const nextIndex = Math.min(state.level + 1, PLANETS.length - 1);
+    releaseGamePointer();
+    startLevel(nextIndex);
+    return;
+  }
+
+  if (e.code === "Enter" && document.getElementById("complete").style.display !== "none") {
+    startLevel(0);
+    return;
+  }
+});
+addEventListener("keyup", (e) => state.keys[e.code] = false);
+
+addEventListener("resize", () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  const pixelRatio = Math.min(devicePixelRatio, innerWidth < 1000 ? 1.5 : 2);
+  renderer.setPixelRatio(pixelRatio);
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+
+let lookX = 0;
+let lookY = 0;
+
+addEventListener("mousemove", (e) => {
+  if (!state.running) return;
+  if (document.pointerLockElement === renderer.domElement) {
+    cameraState.targetYaw -= e.movementX * cameraState.sensitivity;
+    cameraState.targetPitch -= e.movementY * cameraState.sensitivity * 0.86;
+    cameraState.targetPitch = THREE.MathUtils.clamp(
+      cameraState.targetPitch,
+      cameraState.minPitch,
+      cameraState.maxPitch
+    );
+  }
+});
+
+renderer.domElement.addEventListener("click", () => {
+  if (state.running && document.pointerLockElement !== renderer.domElement) {
+    renderer.domElement.requestPointerLock?.();
+  }
+});
+
+document.addEventListener("pointerlockchange", () => {
+  const gameActive = !!state.running;
+  if (!gameActive) {
+    document.exitPointerLock?.();
+  }
+});
+
+function inputAxis() {
+  let x = 0, z = 0;
+  if (state.keys.ArrowLeft || state.keys.KeyA) x -= 1;
+  if (state.keys.ArrowRight || state.keys.KeyD) x += 1;
+  if (state.keys.ArrowUp || state.keys.KeyW) z -= 1;
+  if (state.keys.ArrowDown || state.keys.KeyS) z += 1;
+  const len = Math.hypot(x,z);
+  if (len > 1) { x/=len; z/=len; }
+  return {x,z};
+}
+
+function tick(dt) {
+  if (!state.running) return;
+
+  const p = PLANETS[state.level];
+  const a = inputAxis();
+
+  const control = 15 / Math.max(0.65, (p.gravity/12));
+  state.vx += a.x * control * dt;
+  state.vz += a.z * control * dt;
+
+  if ((state.keys.Space || state.keys.KeyJ) && state.grounded && state.jumpCooldown <= 0) {
+    state.grounded = false;
+    state.airborne = true;
+    state.vy = 2.35;
+    state.jumpCooldown = .55;
+    state.hitLocked = false;
+    showToast("Jumping into the crater!");
+  }
+  if (state.jumpCooldown > 0) state.jumpCooldown -= dt;
+
+  if (state.grounded) {
+    player.position.y = state.startY;
+    state.vy = 0;
+  }
+
+  state.vx *= Math.pow(.07, dt);
+  state.vz *= Math.pow(.07, dt);
+
+  if (state.airborne) {
+    state.vy = (state.vy ?? 0) + p.gravity * dt;
+    state.vy = Math.min(state.vy, p.gravity * 1.18);
+
+    player.position.x += state.vx * dt;
+    player.position.z += state.vz * dt;
+    player.position.y -= state.vy * dt;
+  } else {
+    player.position.x += state.vx * dt;
+    player.position.z += state.vz * dt;
+  }
+
+  if (!state.airborne) {
+    const minZ = p.radius*.28, maxZ = p.radius*.82;
+    player.position.z = THREE.MathUtils.clamp(player.position.z, minZ, maxZ);
+    player.position.x = THREE.MathUtils.clamp(player.position.x, -p.radius*.62, p.radius*.62);
+  } else {
+    const maxR = p.radius * .78;
+    const r = Math.hypot(player.position.x, player.position.z);
+    if (r > maxR) {
+      const nx = player.position.x / r, nz = player.position.z / r;
+      player.position.x = nx * maxR;
+      player.position.z = nz * maxR;
+      state.vx *= -.45;
+      state.vz *= -.45;
+    }
+  }
+
+  const ambient = levelRoot.children.find(c => c.userData?.kind === "cosmicAtmosphere");
+  if (ambient) {
+    ambient.children.forEach((obj, idx) => {
+      if (obj.userData?.spin) {
+        obj.rotation.x += dt * obj.userData.spin;
+        obj.rotation.y += dt * obj.userData.spin * .7;
+      }
+      if (idx < 14) {
+        obj.position.y += Math.sin(performance.now() * 0.00025 + idx) * 0.0025;
+        obj.position.x += Math.sin(performance.now() * 0.00015 + idx) * 0.0015;
+      }
+    });
+  }
+
+  for (const h of hazards) {
+    const phase = performance.now() * 0.001 * p.speed + h.userData.phase;
+    if (h.userData.kind === "rocks") {
+      h.rotation.y += dt * (0.18 + p.speed * .10);
+      h.position.x = h.userData.anchorX + Math.sin(phase * 0.38) * p.radius * 0.10;
+      h.position.z = h.userData.anchorZ + Math.cos(phase * 0.31) * p.radius * 0.10;
+    }
+    if (h.userData.kind === "lasers") {
+      h.rotation.y += dt * (0.22 + p.speed * .10);
+    }
+    if (h.userData.kind === "asteroids") {
+      h.rotation.x += dt * .36;
+      h.rotation.y += dt * .26;
+      h.position.x = h.userData.anchorX + Math.sin(phase * .34) * p.radius * 0.10;
+      h.position.z = h.userData.anchorZ + Math.cos(phase * .29) * p.radius * 0.10;
+    }
+    if (h.userData.kind === "fans") {
+      h.rotation.y += dt * (0.85 + p.speed * .35);
+    }
+    if (h.userData.kind === "rings") {
+      h.rotation.z += dt * (0.50 + p.speed * .22);
+      h.rotation.x += dt * .12;
+    }
+  }
+
+  playerVisual.visible = false;
+
+  playerVisual.rotation.z = -state.vx*.025;
+  playerVisual.rotation.x = state.vz*.018;
+  playerVisual.rotation.y += dt*0.3;
+
+  const hitHazard = collisionTest();
+  if (hitHazard) {
+    respawn(`You hit ${hitHazard.userData.kind}!`);
+  }
+
+  if (state.respawnTimer > 0) {
+    state.respawnTimer -= dt;
+    if (state.respawnTimer <= 0) {
+      state.respawnTimer = 0;
+      state.hitLocked = false;
+      state.grounded = true;
+      state.airborne = false;
+    }
+  }
+
+  if (state.invulnerable > 0) {
+    state.invulnerable = Math.max(0, state.invulnerable - dt);
+  }
+
+  // Bottom landing zone. Finish only once, after a genuine descent.
+  if (
+    state.airborne &&
+    !state.finished &&
+    player.position.y < -p.depth + 8 &&
+    state.vy > 0
+  ) {
+    state.finished = true;
+    finishLevel();
+    return;
+  }
+
+  updateDepth();
+
+  // First-person camera: smooth, wide, and biased downward so the dropper stays readable.
+  camera.position.set(0, 0.68, 0);
+
+  const speedNorm = Math.min(1, Math.abs(state.vy) / Math.max(1, p.gravity));
+  const targetPitch = cameraState.targetPitch - 0.22 - speedNorm * 0.12;
+
+  cameraState.yaw = THREE.MathUtils.damp(cameraState.yaw, cameraState.targetYaw, 7.5, dt);
+  cameraState.pitch = THREE.MathUtils.damp(cameraState.pitch, targetPitch, 7.5, dt);
+
+  // Gentle falling motion without the camera becoming disorienting.
+  cameraState.bob += dt * (2.0 + speedNorm*3.5);
+  const bobAmount = state.airborne ? 0.012 : 0.006;
+  camera.position.y += Math.sin(cameraState.bob) * bobAmount;
+  camera.rotation.order = "YXZ";
+  camera.rotation.x = cameraState.pitch;
+  camera.rotation.y = cameraState.yaw;
+  camera.rotation.z = THREE.MathUtils.damp(camera.rotation.z, -state.vx*.006, 6.0, dt);
+
+  // Dynamic FOV gives a wider view while falling and a calmer view while standing.
+  const targetFov = state.airborne ? 90 : 78;
+  camera.fov = THREE.MathUtils.damp(camera.fov, targetFov, 4.5, dt);
+  camera.updateProjectionMatrix();
+
+  if (state.shake > 0) {
+    state.shake -= dt;
+    camera.position.x += (Math.random()-.5)*state.shake;
+    camera.position.z += (Math.random()-.5)*state.shake;
+  }
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  const now = performance.now();
+  const dt = Math.min(.033, (now-lastTime)/1000);
+  lastTime = now;
+  tick(dt);
+
+  if (!state.running && !player.visible) {
+    // Keep the menu camera outside the player for a cinematic preview.
+    const previewY = 12 + Math.sin(now * .0004) * 2;
+    const previewX = Math.sin(now * .00016) * 30;
+    const previewZ = Math.cos(now * .00016) * 30;
+    camera.position.set(previewX, previewY, previewZ);
+    camera.lookAt(0, -24, 0);
+  }
+
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>
