@@ -30,9 +30,9 @@
     color: #fff;
     background:
       linear-gradient(135deg, rgba(104, 82, 255, .96), rgba(213, 83, 255, .92));
-    padding: 18px 30px;
-    min-width: 220px;
-    min-height: 58px;
+    padding: 14px 22px;
+    min-width: 180px;
+    min-height: 50px;
     border-radius: 18px;
     font-size: 18px;
     font-weight: 800;
@@ -95,19 +95,14 @@
     backdrop-filter: blur(7px);
   }
   .panel {
-    width: min(820px, calc(100vw - 30px));
-    max-height: calc(100vh - 30px);
+    width: min(860px, calc(100vw - 34px));
+    max-height: calc(100vh - 34px);
     overflow: auto;
-    padding: 40px;
-    border: 1px solid rgba(196, 160, 255, .26);
-    border-radius: 28px;
-    background:
-      radial-gradient(circle at 12% 10%, rgba(97, 116, 255, .18), transparent 30%),
-      radial-gradient(circle at 92% 85%, rgba(255, 89, 214, .16), transparent 34%),
-      linear-gradient(145deg, rgba(10, 8, 34, .95), rgba(28, 9, 48, .92));
-    box-shadow:
-      0 25px 100px rgba(0,0,0,.58),
-      0 0 80px rgba(126, 90, 255, .14);
+    padding: 34px 38px;
+    border: 1px solid rgba(180, 190, 220, .22);
+    border-radius: 16px;
+    background: rgba(12, 15, 27, .96);
+    box-shadow: 0 18px 60px rgba(0,0,0,.48);
     text-align: center;
   }
   .panel h1 {
@@ -137,18 +132,51 @@
   }
   .levels {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
-    margin: 22px 0;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+    margin: 24px 0;
+    align-items: stretch;
   }
   .level-card {
-    padding: 19px;
+    width: 100%;
+    min-width: 0;
+    min-height: 142px;
+    padding: 17px 15px;
     text-align: left;
-    border: 1px solid var(--line);
-    background: linear-gradient(145deg, rgba(105,87,255,.16), rgba(20,182,255,.08));
-    border-radius: 18px;
+    border: 1px solid rgba(180,190,220,.22);
+    background: #171b2a;
+    border-radius: 12px;
+    box-shadow: none;
+    transform: none !important;
   }
-  .level-card strong { display:block; margin-bottom: 4px; }
+  .level-card:hover:not(:disabled) {
+    background: #1d2334;
+    border-color: rgba(139,233,255,.55);
+    box-shadow: 0 8px 22px rgba(0,0,0,.26);
+  }
+  .level-card:disabled {
+    cursor: not-allowed;
+    background: #111520;
+    border-color: rgba(150,150,170,.14);
+  }
+  .level-card strong { display:block; margin-bottom: 9px; font-size: 16px; }
+  .level-card .small { line-height: 1.55; }
+  .level-number {
+    display: inline-block;
+    min-width: 25px;
+    margin-right: 5px;
+    color: #8be9ff;
+    font-weight: 800;
+  }
+  .level-difficulty {
+    display: block;
+    margin-top: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: #aab3c8;
+    text-transform: uppercase;
+  }
   .small { color: var(--muted); font-size: 13px; }
   .controls {
     display:grid;
@@ -176,9 +204,14 @@
     display: none;
     pointer-events: none;
   }
+  @media (max-width: 900px) {
+    .levels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
   @media (max-width: 560px) {
     .panel { padding: 23px; }
     .panel h1 { letter-spacing: -2px; }
+    .levels { grid-template-columns: 1fr; }
+    .level-card { min-height: 118px; }
   }
 </style>
 </head>
@@ -198,10 +231,10 @@
     <div class="small" style="letter-spacing:4px; color:#8be9ff;">A 3D COSMIC DROPPER</div>
     <h1>COSMIC<br>DROPPER</h1>
     <div style="display:inline-flex; gap:8px; align-items:center; padding:8px 14px; border:1px solid rgba(139,233,255,.25); border-radius:999px; background:rgba(139,233,255,.06); color:#d8d2ff; font-size:13px;">
-      ✦ Decend • Avoid • Survive • Conquer ✦
+      Decend • Avoid • Survive
     </div>
     <div class="subtitle">
-      Fall through the different cores of the different planets, and avoid the objects trying to stop you. Do it with the least amount of spawns.
+      Drop through five planetary shafts. Use the mouse to look and WASD to steer relative to your view. Avoid the hazards and reach the bottom with as few deaths as possible.
     </div>
     <div class="button-row">
       <button id="startBtn">Start Game</button>
@@ -383,7 +416,7 @@ const PLANETS = [
     depth: 390,
     craterCount: 11,
     obstacle: "rocks",
-    speed: 0.72,
+    speed: 0.88,
     layout: "slalom"
   },
   {
@@ -396,7 +429,7 @@ const PLANETS = [
     depth: 430,
     craterCount: 13,
     obstacle: "lasers",
-    speed: 0.76,
+    speed: 1.02,
     layout: "gates"
   },
   {
@@ -404,12 +437,12 @@ const PLANETS = [
     color: 0xd45a43,
     accent: 0xffcf78,
     fog: 0x1c0905,
-    gravity: 14.0,
+    gravity: 14.5,
     radius: 15.5,
     depth: 470,
-    craterCount: 14,
+    craterCount: 15,
     obstacle: "asteroids",
-    speed: 0.80,
+    speed: 1.16,
     layout: "field"
   },
   {
@@ -417,12 +450,12 @@ const PLANETS = [
     color: 0x2378d1,
     accent: 0x66f4ff,
     fog: 0x041526,
-    gravity: 9.0,
+    gravity: 15.5,
     radius: 17,
     depth: 500,
-    craterCount: 15,
+    craterCount: 16,
     obstacle: "fans",
-    speed: 0.64,
+    speed: 1.30,
     layout: "spiral"
   },
   {
@@ -430,12 +463,12 @@ const PLANETS = [
     color: 0x3b356f,
     accent: 0xa6ffe5,
     fog: 0x030c13,
-    gravity: 16.0,
+    gravity: 17.0,
     radius: 14,
     depth: 540,
-    craterCount: 17,
+    craterCount: 18,
     obstacle: "rings",
-    speed: 0.86,
+    speed: 1.44,
     layout: "rings"
   }
 ];
@@ -579,7 +612,6 @@ function makeLaunchPlatform(p) {
     platform.add(marker);
   }
 
-  // "DROP" beacon in the center.
   const beacon = new THREE.Mesh(
     new THREE.CylinderGeometry(.25, .25, 2.8, 16),
     new THREE.MeshStandardMaterial({
@@ -673,7 +705,6 @@ function makeSurfaceAndEntrance(p) {
   surface.receiveShadow = true;
   levelRoot.add(surface);
 
-  // Radial glowing paths.
   for (let i=0; i<10; i++) {
     const a = i/10*Math.PI*2;
     const path = new THREE.Mesh(
@@ -786,7 +817,6 @@ function makeCraterWalls(p, floorY, radius) {
     levelRoot.add(light);
   }
 
-  // Long glowing wall bands to make the whole shaft feel like a cosmic tunnel.
   const p2 = new THREE.Color(p.accent);
   for (let i=0; i<10; i++) {
     const bandY = floorY - 25 - i * ((p.depth-40)/10);
@@ -1104,7 +1134,6 @@ function buildLevel(index) {
     }
   }
 
-  // Finish beacon at bottom.
   const beacon = new THREE.Group();
   const beam = new THREE.Mesh(
     new THREE.CylinderGeometry(.16,.16,9,16),
@@ -1314,8 +1343,9 @@ function populateLevelSelect() {
     const card = document.createElement("button");
     card.className = "level-card";
     card.disabled = i+1 > state.unlocked;
-    card.innerHTML = `<strong>${i+1}. ${p.name}</strong><span class="small">Gravity ${(p.gravity/9).toFixed(2)}× • ${p.obstacle}<br>${p.layout.toUpperCase()} COURSE</span>`;
-    card.style.opacity = card.disabled ? ".4" : "1";
+    const difficulty = ["Easy", "Moderate", "Hard", "Very Hard", "Extreme"][i];
+    card.innerHTML = `<strong><span class="level-number">${i+1}</span>${p.name}</strong><span class="small">Gravity ${(p.gravity/9).toFixed(2)}× • ${p.obstacle}<br>${p.layout.toUpperCase()} COURSE</span><span class="level-difficulty">${difficulty}</span>`;
+    card.style.opacity = card.disabled ? ".48" : "1";
     card.addEventListener("click", () => {
       releaseGamePointer();
       startLevel(i);
@@ -1421,14 +1451,23 @@ document.addEventListener("pointerlockchange", () => {
 });
 
 function inputAxis() {
-  let x = 0, z = 0;
-  if (state.keys.ArrowLeft || state.keys.KeyA) x -= 1;
-  if (state.keys.ArrowRight || state.keys.KeyD) x += 1;
-  if (state.keys.ArrowUp || state.keys.KeyW) z -= 1;
-  if (state.keys.ArrowDown || state.keys.KeyS) z += 1;
-  const len = Math.hypot(x,z);
-  if (len > 1) { x/=len; z/=len; }
-  return {x,z};
+  let strafe = 0;
+  let forward = 0;
+  if (state.keys.ArrowLeft || state.keys.KeyA) strafe -= 1;
+  if (state.keys.ArrowRight || state.keys.KeyD) strafe += 1;
+  if (state.keys.ArrowUp || state.keys.KeyW) forward += 1;
+  if (state.keys.ArrowDown || state.keys.KeyS) forward -= 1;
+
+  const len = Math.hypot(strafe, forward);
+  if (len > 1) { strafe /= len; forward /= len; }
+
+  const yaw = cameraState.yaw;
+  const sin = Math.sin(yaw);
+  const cos = Math.cos(yaw);
+  return {
+    x: strafe * cos - forward * sin,
+    z: strafe * sin - forward * cos
+  };
 }
 
 function tick(dt) {
@@ -1437,9 +1476,16 @@ function tick(dt) {
   const p = PLANETS[state.level];
   const a = inputAxis();
 
-  const control = 15 / Math.max(0.65, (p.gravity/12));
+  const control = 15.5 / Math.max(0.65, (p.gravity/12));
   state.vx += a.x * control * dt;
   state.vz += a.z * control * dt;
+  const maxHorizontalSpeed = 8.5 + state.level * 0.55;
+  const horizontalSpeed = Math.hypot(state.vx, state.vz);
+  if (horizontalSpeed > maxHorizontalSpeed) {
+    const scale = maxHorizontalSpeed / horizontalSpeed;
+    state.vx *= scale;
+    state.vz *= scale;
+  }
 
   if ((state.keys.Space || state.keys.KeyJ) && state.grounded && state.jumpCooldown <= 0) {
     state.grounded = false;
@@ -1504,25 +1550,25 @@ function tick(dt) {
   for (const h of hazards) {
     const phase = performance.now() * 0.001 * p.speed + h.userData.phase;
     if (h.userData.kind === "rocks") {
-      h.rotation.y += dt * (0.18 + p.speed * .10);
-      h.position.x = h.userData.anchorX + Math.sin(phase * 0.38) * p.radius * 0.10;
-      h.position.z = h.userData.anchorZ + Math.cos(phase * 0.31) * p.radius * 0.10;
+      h.rotation.y += dt * (0.25 + p.speed * .12);
+      h.position.x = h.userData.anchorX + Math.sin(phase * 0.38) * p.radius * (0.08 + state.level * 0.008);
+      h.position.z = h.userData.anchorZ + Math.cos(phase * 0.31) * p.radius * (0.08 + state.level * 0.008);
     }
     if (h.userData.kind === "lasers") {
-      h.rotation.y += dt * (0.22 + p.speed * .10);
+      h.rotation.y += dt * (0.30 + p.speed * .16);
     }
     if (h.userData.kind === "asteroids") {
       h.rotation.x += dt * .36;
       h.rotation.y += dt * .26;
-      h.position.x = h.userData.anchorX + Math.sin(phase * .34) * p.radius * 0.10;
-      h.position.z = h.userData.anchorZ + Math.cos(phase * .29) * p.radius * 0.10;
+      h.position.x = h.userData.anchorX + Math.sin(phase * .34) * p.radius * (0.09 + state.level * 0.01);
+      h.position.z = h.userData.anchorZ + Math.cos(phase * .29) * p.radius * (0.09 + state.level * 0.01);
     }
     if (h.userData.kind === "fans") {
-      h.rotation.y += dt * (0.85 + p.speed * .35);
+      h.rotation.y += dt * (1.05 + p.speed * .42);
     }
     if (h.userData.kind === "rings") {
-      h.rotation.z += dt * (0.50 + p.speed * .22);
-      h.rotation.x += dt * .12;
+      h.rotation.z += dt * (0.72 + p.speed * .30);
+      h.rotation.x += dt * .16;
     }
   }
 
@@ -1551,7 +1597,6 @@ function tick(dt) {
     state.invulnerable = Math.max(0, state.invulnerable - dt);
   }
 
-  // Bottom landing zone. Finish only once, after a genuine descent.
   if (
     state.airborne &&
     !state.finished &&
@@ -1565,7 +1610,6 @@ function tick(dt) {
 
   updateDepth();
 
-  // First-person camera: smooth, wide, and biased downward so the dropper stays readable.
   camera.position.set(0, 0.68, 0);
 
   const speedNorm = Math.min(1, Math.abs(state.vy) / Math.max(1, p.gravity));
@@ -1574,7 +1618,6 @@ function tick(dt) {
   cameraState.yaw = THREE.MathUtils.damp(cameraState.yaw, cameraState.targetYaw, 7.5, dt);
   cameraState.pitch = THREE.MathUtils.damp(cameraState.pitch, targetPitch, 7.5, dt);
 
-  // Gentle falling motion without the camera becoming disorienting.
   cameraState.bob += dt * (2.0 + speedNorm*3.5);
   const bobAmount = state.airborne ? 0.012 : 0.006;
   camera.position.y += Math.sin(cameraState.bob) * bobAmount;
@@ -1583,7 +1626,6 @@ function tick(dt) {
   camera.rotation.y = cameraState.yaw;
   camera.rotation.z = THREE.MathUtils.damp(camera.rotation.z, -state.vx*.006, 6.0, dt);
 
-  // Dynamic FOV gives a wider view while falling and a calmer view while standing.
   const targetFov = state.airborne ? 90 : 78;
   camera.fov = THREE.MathUtils.damp(camera.fov, targetFov, 4.5, dt);
   camera.updateProjectionMatrix();
@@ -1603,7 +1645,6 @@ function animate() {
   tick(dt);
 
   if (!state.running && !player.visible) {
-    // Keep the menu camera outside the player for a cinematic preview.
     const previewY = 12 + Math.sin(now * .0004) * 2;
     const previewX = Math.sin(now * .00016) * 30;
     const previewZ = Math.cos(now * .00016) * 30;
