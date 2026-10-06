@@ -18,3 +18,4 @@ The game consists around a toolbar that can be used to access 6 tools:\
   5. Rocket Launcher, used to shoot missiles at objects... and Zombies.\
   6. Trasher, used to get rid of redundant objects you don’t want lying around.*\
 One of the main takeaways from the game is the Physics, I've spent a lot of time trying to refine them to make it highly realistic.\
+Thank you for reading! :D
